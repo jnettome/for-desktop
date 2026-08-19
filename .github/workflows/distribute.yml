@@ -19,12 +19,15 @@ jobs:
           - os: ubuntu-latest
             name: linux
             make_targets: "@electron-forge/maker-zip,@electron-forge/maker-deb"
+            platform: ""
           - os: windows-latest
             name: windows
             make_targets: "@electron-forge/maker-squirrel,@electron-forge/maker-zip"
+            platform: windows-latest
           - os: macos-latest
             name: macos
             make_targets: "@electron-forge/maker-zip"
+            platform: macos-latest
 
     steps:
       - name: Checkout
@@ -52,7 +55,7 @@ jobs:
       - name: Make distributables
         run: pnpm run make -- --targets=${{ matrix.make_targets }}
         env:
-          PLATFORM: ${{ matrix.os }}
+          PLATFORM: ${{ matrix.platform }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -64,6 +67,7 @@ jobs:
   release:
     name: GitHub Release
     needs: make
+    if: ${{ always() && !cancelled() }}
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts

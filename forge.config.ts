@@ -149,19 +149,24 @@ const config: ForgeConfig = {
     // Copy the node-pipewire dist to the app on linux
     packageAfterCopy: async (_config, buildPath, _version, platform) => {
       if (platform === "linux") {
+        const pipewireRoot = "node_modules/node-pipewire";
+        if (!fs.existsSync(path.join(pipewireRoot, "dist"))) {
+          console.warn("node-pipewire dist missing; skipping virtual mic copy");
+          return;
+        }
         // Copy only the files we need to run the code, which is dist, LICENSE, and package.json
         fs.cpSync(
-          "node_modules/node-pipewire/dist",
+          path.join(pipewireRoot, "dist"),
           path.join(buildPath, "node_modules/node-pipewire/dist"),
           { recursive: true },
         );
         fs.cpSync(
-          "node_modules/node-pipewire/LICENSE",
+          path.join(pipewireRoot, "LICENSE"),
           path.join(buildPath, "node_modules/node-pipewire/LICENSE"),
           { recursive: true },
         );
         fs.cpSync(
-          "node_modules/node-pipewire/package.json",
+          path.join(pipewireRoot, "package.json"),
           path.join(buildPath, "node_modules/node-pipewire/package.json"),
           { recursive: true },
         );
