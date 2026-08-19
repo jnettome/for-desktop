@@ -146,6 +146,9 @@ export function createMainWindow() {
     ) {
       event.preventDefault();
       mainWindow.webContents.reload();
+    } else if ((input.control || input.meta) && input.key === ",") {
+      event.preventDefault();
+      loadSetupPage();
     }
   });
 

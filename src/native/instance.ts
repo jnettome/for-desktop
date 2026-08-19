@@ -20,10 +20,15 @@ export function getBuildUrl(): URL {
 }
 
 /**
- * First boot shows the local setup page unless a session override is set.
+ * Show setup when no instance has been chosen yet.
+ * Also covers upgrades from official Stoat Desktop, which already have firstLaunch=false.
  */
 export function shouldShowSetup(): boolean {
-  return config.firstLaunch && !app.commandLine.hasSwitch("force-server");
+  if (app.commandLine.hasSwitch("force-server")) {
+    return false;
+  }
+
+  return config.firstLaunch || !config.serverUrl;
 }
 
 /**
