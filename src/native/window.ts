@@ -14,17 +14,16 @@ import {
 import windowIconAsset from "../../assets/desktop/icon.png?asset";
 
 import { config } from "./config";
+import {
+  OFFICIAL_SERVER_URL,
+  getBuildUrl,
+  normalizeServerUrl,
+  shouldShowSetup,
+} from "./instance";
 import { updateTrayMenu } from "./tray";
 
 // global reference to main window
 export let mainWindow: BrowserWindow;
-
-// currently in-use build
-export const BUILD_URL = new URL(
-  app.commandLine.hasSwitch("force-server")
-    ? app.commandLine.getSwitchValue("force-server")
-    : /*MAIN_WINDOW_VITE_DEV_SERVER_URL ??*/ "https://stoat.chat/app",
-);
 
 // internal window state
 let shouldQuit = false;
@@ -88,10 +87,12 @@ export function createMainWindow() {
     mainWindow.maximize();
   }
 
-  // load the entrypoint
-  mainWindow
-    .loadURL(BUILD_URL.toString())
-    .then(() => mainWindow.webContents.reload());
+  // load setup on first launch, otherwise the configured instance
+  if (shouldShowSetup()) {
+    loadSetupPage();
+  } else {
+    loadRemoteClient();
+  }
 
   // minimise window to tray
   mainWindow.on("close", (event) => {
@@ -267,12 +268,83 @@ export function createMainWindow() {
 }
 
 /**
+ * Load the local instance setup page.
+ */
+export function loadSetupPage() {
+  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+    void mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+  } else {
+    void mainWindow.loadFile(
+      join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`),
+    );
+  }
+}
+
+/**
+ * Load the remote web client, then reload once to bust stale cache.
+ */
+export function loadRemoteClient(url?: string) {
+  const target = url ?? getBuildUrl().toString();
+  void mainWindow.loadURL(target).then(() => {
+    if (!mainWindow.isDestroyed()) {
+      mainWindow.webContents.reload();
+    }
+  });
+}
+
+/**
+ * Show the instance setup page from the tray or settings.
+ */
+export function showInstanceSetup() {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    return;
+  }
+
+  mainWindow.show();
+  mainWindow.focus();
+  loadSetupPage();
+}
+
+/**
  * Quit the entire app
  */
 export function quitApp() {
   shouldQuit = true;
   mainWindow.close();
 }
+
+ipcMain.handle("getInstanceSetup", () => ({
+  serverUrl: config.serverUrl,
+  officialUrl: OFFICIAL_SERVER_URL,
+  firstLaunch: config.firstLaunch,
+}));
+
+ipcMain.handle("applyServerUrl", (_, url: string) => {
+  try {
+    const normalized = normalizeServerUrl(url);
+    config.serverUrl = normalized;
+    config.firstLaunch = false;
+    loadRemoteClient(normalized);
+    return { ok: true as const, url: normalized };
+  } catch (error) {
+    return {
+      ok: false as const,
+      error: error instanceof Error ? error.message : "Invalid URL",
+    };
+  }
+});
+
+ipcMain.handle("cancelInstanceSetup", () => {
+  if (shouldShowSetup()) {
+    return {
+      ok: false as const,
+      error: "Choose an instance to continue.",
+    };
+  }
+
+  loadRemoteClient();
+  return { ok: true as const };
+});
 
 // Ensure global app quit works properly
 app.on("before-quit", () => {

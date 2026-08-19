@@ -1,12 +1,53 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Hello World!</title>
+    <title>Choose an instance</title>
   </head>
   <body>
-    <h1>💖 Hello World!</h1>
-    <p>Welcome to your Electron application.</p>
+    <main class="setup">
+      <h1>Choose an instance</h1>
+      <p class="lede">
+        Connect to official Stoat, or point this app at a self-hosted server.
+      </p>
+
+      <form id="instance-form">
+        <label class="option">
+          <input type="radio" name="mode" value="official" checked />
+          <span>
+            <strong>Stoat (official)</strong>
+            <small id="official-url"></small>
+          </span>
+        </label>
+
+        <label class="option">
+          <input type="radio" name="mode" value="custom" />
+          <span>
+            <strong>Self-hosted</strong>
+            <small>Your own instance URL</small>
+          </span>
+        </label>
+
+        <label class="field" id="custom-field" hidden>
+          Instance URL
+          <input
+            id="custom-url"
+            type="url"
+            name="customUrl"
+            placeholder="https://your.domain"
+            autocomplete="url"
+            spellcheck="false"
+          />
+        </label>
+
+        <p class="error" id="error" hidden></p>
+
+        <div class="actions">
+          <button type="button" id="cancel" hidden>Cancel</button>
+          <button type="submit" id="continue">Continue</button>
+        </div>
+      </form>
+    </main>
     <script type="module" src="/src/renderer.ts"></script>
   </body>
 </html>

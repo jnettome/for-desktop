@@ -5,9 +5,10 @@ import started from "electron-squirrel-startup";
 
 import { config } from "./native/config";
 import { initDiscordRpc } from "./native/discordRpc";
+import { isAllowedNavigationUrl } from "./native/instance";
 import { initTray } from "./native/tray";
 import { initVirtualMic } from "./native/virtualMic";
-import { BUILD_URL, createMainWindow, mainWindow } from "./native/window";
+import { createMainWindow, mainWindow } from "./native/window";
 
 // Squirrel-specific logic
 // create/remove shortcuts on Windows when installing / uninstalling
@@ -42,13 +43,6 @@ if (acquiredLock) {
   app.on("ready", () => {
     // create window and application contexts
     createMainWindow();
-
-    // save first launch state
-    if (config.firstLaunch) {
-      // Doesn't do anything right now. Used to enable auto start, but that behaviour was removed.
-      // Left in case it gets used in the future.
-      config.firstLaunch = false;
-    }
 
     initTray();
     initDiscordRpc();
@@ -89,7 +83,7 @@ if (acquiredLock) {
   app.on("web-contents-created", (_, contents) => {
     // prevent navigation out of build URL origin
     contents.on("will-navigate", (event, navigationUrl) => {
-      if (new URL(navigationUrl).origin !== BUILD_URL.origin) {
+      if (!isAllowedNavigationUrl(navigationUrl)) {
         event.preventDefault();
       }
     });

@@ -4,7 +4,7 @@ import trayIconAsset from "../../assets/desktop/icon.png?asset";
 import macOsTrayIconAsset from "../../assets/desktop/iconTemplate.png?asset";
 import { version } from "../../package.json";
 
-import { mainWindow, quitApp } from "./window";
+import { mainWindow, quitApp, showInstanceSetup } from "./window";
 
 // internal tray state
 let tray: Tray = null;
@@ -53,6 +53,11 @@ export function updateTrayMenu() {
         ]),
       },
       { type: "separator" },
+      {
+        label: "Change instance…",
+        type: "normal",
+        click: showInstanceSetup,
+      },
       {
         label: mainWindow.isVisible() ? "Hide App" : "Show App",
         type: "normal",

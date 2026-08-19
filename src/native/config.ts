@@ -28,6 +28,9 @@ const schema = {
   discordRpc: {
     type: "boolean",
   } as JSONSchema.Boolean,
+  serverUrl: {
+    type: "string",
+  } as JSONSchema.String,
   windowState: {
     type: "object",
     properties: {
@@ -60,6 +63,7 @@ const store = new Store({
     spellchecker: true,
     hardwareAcceleration: true,
     discordRpc: true,
+    serverUrl: "",
     windowState: {
       x: 0,
       y: 0,
@@ -83,6 +87,7 @@ class Config {
       spellchecker: this.spellchecker,
       hardwareAcceleration: this.hardwareAcceleration,
       discordRpc: this.discordRpc,
+      serverUrl: this.serverUrl,
       windowState: this.windowState,
     });
   }
@@ -192,6 +197,19 @@ class Config {
     this.sync();
   }
 
+  get serverUrl() {
+    return (store as never as { get(k: string): string }).get("serverUrl");
+  }
+
+  set serverUrl(value: string) {
+    (store as never as { set(k: string, value: string): void }).set(
+      "serverUrl",
+      value,
+    );
+
+    this.sync();
+  }
+
   get windowState() {
     return (
       store as never as { get(k: string): DesktopConfig["windowState"] }
@@ -213,7 +231,22 @@ export const config = new Config();
 
 ipcMain.on("config", (_, newConfig: Partial<DesktopConfig>) => {
   console.info("Received new configuration", newConfig);
+  const previousUrl = config.serverUrl;
   Object.entries(newConfig).forEach(
     ([key, value]) => (config[key as keyof DesktopConfig] = value as never),
   );
+
+  if (
+    newConfig.serverUrl !== undefined &&
+    newConfig.serverUrl !== previousUrl &&
+    newConfig.serverUrl &&
+    mainWindow &&
+    !mainWindow.isDestroyed()
+  ) {
+    void mainWindow.loadURL(newConfig.serverUrl).then(() => {
+      if (!mainWindow.isDestroyed()) {
+        mainWindow.webContents.reload();
+      }
+    });
+  }
 });

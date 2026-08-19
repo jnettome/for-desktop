@@ -13,4 +13,21 @@ contextBridge.exposeInMainWorld("desktopConfig", {
   setAutostart(value: boolean) {
     return ipcRenderer.invoke("setAutostart", value) as Promise<boolean>;
   },
+  getInstanceSetup() {
+    return ipcRenderer.invoke("getInstanceSetup") as Promise<{
+      serverUrl: string;
+      officialUrl: string;
+      firstLaunch: boolean;
+    }>;
+  },
+  applyServerUrl(url: string) {
+    return ipcRenderer.invoke("applyServerUrl", url) as Promise<
+      { ok: true; url: string } | { ok: false; error: string }
+    >;
+  },
+  cancelInstanceSetup() {
+    return ipcRenderer.invoke("cancelInstanceSetup") as Promise<
+      { ok: true } | { ok: false; error: string }
+    >;
+  },
 });
