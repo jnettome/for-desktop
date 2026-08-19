@@ -97,6 +97,14 @@ const makers: ForgeConfig["makers"] = [
       files: [],
     } as MakerFlatpakOptionsConfig,
   }),
+  new MakerDeb({
+    options: {
+      productName: STRINGS.name,
+      productDescription: STRINGS.description,
+      categories: ["Network"],
+      icon: `${ASSET_DIR}/icon.png`,
+    },
+  }),
 ];
 
 // skip these makers in CI/CD
@@ -108,15 +116,6 @@ if (!process.env.PLATFORM) {
       certPass: "",
       packageExecutable: `app\\${STRINGS.execName}.exe`,
       publisher: "CN=B040CC7E-0016-4AF5-957F-F8977A6CFA3B",
-    }),
-    // testing purposes
-    new MakerDeb({
-      options: {
-        productName: STRINGS.name,
-        productDescription: STRINGS.description,
-        categories: ["Network"],
-        icon: `${ASSET_DIR}/icon.png`,
-      },
     }),
   );
 }

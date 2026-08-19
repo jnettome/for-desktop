@@ -19,15 +19,15 @@ jobs:
           - os: ubuntu-latest
             name: linux
             make_targets: "@electron-forge/maker-zip,@electron-forge/maker-deb"
-            platform: ""
+            platform: linux
           - os: windows-latest
             name: windows
             make_targets: "@electron-forge/maker-squirrel,@electron-forge/maker-zip"
-            platform: windows-latest
+            platform: windows
           - os: macos-latest
             name: macos
             make_targets: "@electron-forge/maker-zip"
-            platform: macos-latest
+            platform: macos
 
     steps:
       - name: Checkout
@@ -52,8 +52,12 @@ jobs:
       - name: Install dependencies
         run: pnpm ci
 
+      - name: Install Debian packaging tools
+        if: matrix.name == 'linux'
+        run: sudo apt-get update && sudo apt-get install -y fakeroot
+
       - name: Make distributables
-        run: pnpm run make -- --targets=${{ matrix.make_targets }}
+        run: pnpm run make -- --targets="${{ matrix.make_targets }}"
         env:
           PLATFORM: ${{ matrix.platform }}
 
